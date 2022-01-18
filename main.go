@@ -16,39 +16,26 @@ serial.begin(9600)
 */
 func main() {
 
-	delay := func(t uint16) {
-		time.Sleep(time.Duration(1000000 * uint32(t)))
-	}
+	machine.InitADC()
+	ldr := machine.ADC{machine.ADC0}
+	ldr.Configure()
 
-	leds := []machine.Pin{
-		machine.D2,
-		machine.D3,
-		machine.D4,
-		machine.D5,
-		machine.D6,
-		machine.D7,
-	}
-
-	for _, led := range leds {
-		led.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	}
-
-	index, delta := 0, 1
+	led := machine.Pin(machine.D9)
+	led.Configure(machine.PinConfig{Mode: machine.PinOutput})
 
 	for {
 
-		for i, led := range leds {
-			led.Set(i == index)
+		print(ldr.Get())
+
+		if ldr.Get() > 40000 {
+			led.Set(true)
+		} else {
+			led.Set(false)
 		}
 
-		index += delta
-
-		if index == 0 || index == len(leds)-1 {
-			delta *= -1
-		}
-
-		delay(75)
+		time.Sleep(time.Millisecond * 100)
 	}
+
 }
 
 /*
