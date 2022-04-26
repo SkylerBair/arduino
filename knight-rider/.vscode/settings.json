@@ -1,0 +1,6 @@
+{
+    "go.toolsEnvVars": {
+        "GOROOT": "/home/skyler/.cache/tinygo/goroot-69d4dd4e42b0c20ced8e32cfa58b0593ee5a356c354f3328202260d070e3e317",
+        "GOFLAGS": "-tags=avr,baremetal,linux,arm,atmega328p,atmega,avr5,arduino,tinygo,math_big_pure_go,gc.conservative,scheduler.none,serial.uart"
+    }
+}
