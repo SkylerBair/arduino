@@ -8,26 +8,160 @@ import (
 )
 
 func main() {
+
+	centerSensor := machine.ADC{Pin: machine.ADC0}
+	centerSensor.Configure(machine.ADCConfig{})
+
+	leftSensor := machine.ADC{Pin: machine.ADC1}
+	leftSensor.Configure(machine.ADCConfig{})
+
+	rightSensor := machine.ADC{Pin: machine.ADC2}
+	rightSensor.Configure(machine.ADCConfig{})
+
+	machine.InitADC()
+
+	motorSpeed()
+
 	delay := func(t uint16) {
 		time.Sleep(time.Duration(1000000 * uint32(t)))
 	}
 
-	delay(100)
+	for {
+
+		print(leftSensor.Get())
+		print(centerSensor.Get())
+		print(rightSensor.Get())
+
+		if leftSensor.Get() < 6000 {
+			sensorTest()
+			reverse()
+			delay(1000)
+			deviateRight()
+			delay(2000)
+
+		} else if rightSensor.Get() < 6000 {
+			sensorTest2()
+			reverse()
+			delay(1000)
+			deviateLeft()
+			delay(2000)
+		} else if centerSensor.Get() < 6000 {
+			sensorTest3()
+			reverse()
+			delay(100)
+			turnAround()
+			delay(3000)
+		} else if leftSensor.Get()&centerSensor.Get() < 6000 {
+			reverse()
+			delay(1000)
+			deviateRight()
+			delay(2000)
+
+		} else if rightSensor.Get()&centerSensor.Get() < 6000 {
+			reverse()
+			delay(1000)
+			deviateLeft()
+			delay(2000)
+
+		} else if leftSensor.Get()&rightSensor.Get()&centerSensor.Get() < 6000 {
+			reverse()
+			delay(1000)
+			turnAround()
+			delay(3000)
+		} else {
+			forward()
+		}
+	}
+
 }
 
 // the pin config shit needs to be added as struct then used when function is called, set up in main.
+func sensorTest() {
+
+	lightCheck := machine.D2
+	lightCheck.Configure(machine.PinConfig{Mode: machine.PinOutput})
+	lightCheck.Set(true)
+	delay := func(t uint16) {
+		time.Sleep(time.Duration(1000000 * uint32(t)))
+	}
+	delay(500)
+	lightCheck.Set(false)
+}
+
+func sensorTest2() {
+
+	lightCheck := machine.D3
+	lightCheck.Configure(machine.PinConfig{Mode: machine.PinOutput})
+	lightCheck.Set(true)
+	delay := func(t uint16) {
+		time.Sleep(time.Duration(1000000 * uint32(t)))
+	}
+	delay(500)
+	lightCheck.Set(false)
+}
+func sensorTest3() {
+
+	lightCheck := machine.D4
+	lightCheck.Configure(machine.PinConfig{Mode: machine.PinOutput})
+	lightCheck.Set(true)
+	delay := func(t uint16) {
+		time.Sleep(time.Duration(1000000 * uint32(t)))
+	}
+	delay(500)
+	lightCheck.Set(false)
+}
+
+func motorSpeed() {
+
+	pwm := machine.Timer1
+	rightMotorSpeed := machine.D5
+
+	err := pwm.Configure(machine.PWMConfig{})
+	if err != nil {
+		println(err.Error())
+	}
+
+	ch, err := pwm.Channel(rightMotorSpeed)
+	if err != nil {
+		println(err.Error())
+	}
+
+	pwm.Set(ch, pwm.Top()/4)
+
+	pwm2 := machine.Timer1
+	leftMotorSpeed := machine.D9
+
+	err2 := pwm2.Configure(machine.PWMConfig{})
+	if err != nil {
+		println(err.Error())
+	}
+
+	ch2, err2 := pwm2.Channel(leftMotorSpeed)
+	if err != nil {
+		println(err2.Error())
+	}
+
+	pwm2.Set(ch2, pwm.Top()/4)
+
+}
 
 func deviateRight() {
 	//pin Config's
-	leftMotorForward := machine.D6
+	//motorSpeed(250, 250)
+	leftMotorReverse := machine.D6
+	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	leftMotorForward := machine.D10
 	leftMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	leftMotorReverse := machine.D10 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorForward := machine.D9
+
+	rightMotorForward := machine.D13
 	rightMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorReverse := machine.D11 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	rightMotorReverse := machine.D11
+	rightMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
 	//motor set up
+
+	//motorSpeed(250, 250)
 	leftMotorForward.High()
 	rightMotorForward.Low()
 	leftMotorReverse.Low()
@@ -37,35 +171,42 @@ func deviateRight() {
 
 func deviateLeft() {
 	//pin Config's
-	leftMotorForward := machine.D6
+	leftMotorReverse := machine.D6
+	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	leftMotorForward := machine.D10
 	leftMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	leftMotorReverse := machine.D10 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorForward := machine.D9
+
+	rightMotorForward := machine.D13
 	rightMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorReverse := machine.D11 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	rightMotorReverse := machine.D11
+	rightMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
 	//motor set up
-	reverse()
+
+	//motorSpeed(250, 250)
 	leftMotorForward.Low()
 	rightMotorForward.High()
-	leftMotorReverse.High()
+	leftMotorReverse.Low()
 	rightMotorReverse.Low()
 
 }
 
 func forward() {
 	//pin Config's
-	leftMotorForward := machine.D6
+	leftMotorReverse := machine.D6
+	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	leftMotorForward := machine.D10
 	leftMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	leftMotorReverse := machine.D10 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorForward := machine.D9
+
+	rightMotorForward := machine.D13
 	rightMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorReverse := machine.D11 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	rightMotorReverse := machine.D11
+	rightMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
 	//motor set up
-	reverse()
+	//motorSpeed(250, 250)
 	leftMotorForward.High()
 	rightMotorForward.High()
 	leftMotorReverse.Low()
@@ -75,19 +216,46 @@ func forward() {
 
 func reverse() {
 	//pin Config's
-	leftMotorForward := machine.D6
+	leftMotorReverse := machine.D6
+	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	leftMotorForward := machine.D10
 	leftMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	leftMotorReverse := machine.D10 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorForward := machine.D9
+
+	rightMotorForward := machine.D13
 	rightMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	rightMotorReverse := machine.D11 //P9 is the Arduino output 9 that inits the Right motor to turn forward.
-	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	rightMotorReverse := machine.D11
+	rightMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
 	//motor set up
-	leftMotorForward.Low()
+	//motorSpeed(250, 250)
 	rightMotorForward.Low()
-	leftMotorReverse.High()
 	rightMotorReverse.High()
+	leftMotorForward.Low()
+	leftMotorReverse.High()
+
+}
+
+func turnAround() {
+	//pin Config's
+	leftMotorReverse := machine.D6
+	leftMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	leftMotorForward := machine.D10
+	leftMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	rightMotorForward := machine.D13
+	rightMotorForward.Configure(machine.PinConfig{Mode: machine.PinOutput})
+
+	rightMotorReverse := machine.D11
+	rightMotorReverse.Configure(machine.PinConfig{Mode: machine.PinOutput})
+	//motor set up
+
+	//motorSpeed(250, 250)
+	leftMotorForward.Low()
+	rightMotorForward.High()
+	leftMotorReverse.High()
+	rightMotorReverse.Low()
 
 }
 
